@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Send, Moon, Sun, Bus, ArrowRight } from "lucide-react";
 import { ChatMessage } from "./components/ChatMessage";
 import { TypingIndicator } from "./components/TypingIndicator";
+import Map from "./components/Map"; // Import the Map component
 
 function App() {
   const [messages, setMessages] = useState([
@@ -15,6 +16,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [showMap, setShowMap] = useState(false); // Controls map visibility
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = () => {
@@ -63,6 +65,9 @@ function App() {
           timestamp: new Date().toLocaleTimeString(),
         },
       ]);
+
+      // Show the map after receiving a response
+      setShowMap(true);
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -124,24 +129,21 @@ function App() {
 
   return (
     <div className={`min-h-screen ${darkMode ? "bg-gray-900" : "bg-gradient-to-br from-blue-50 to-purple-50"}`}>
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className={`rounded-xl shadow-lg overflow-hidden ${darkMode ? "bg-gray-800" : "bg-white"}`}>
-          {/* Header */}
-          <div className={`p-4 border-b ${darkMode ? "border-gray-700 bg-gray-800" : "border-gray-100 bg-white"} flex justify-between items-center`}>
+      <div className="container mx-auto px-4 py-8 flex space-x-4">
+        {/* Chat Section */}
+        <div className="w-2/3 rounded-xl shadow-lg overflow-hidden">
+          <div className="p-4 border-b flex justify-between items-center">
             <div className="flex items-center">
-              <Bus className={`w-6 h-6 mr-2 ${darkMode ? "text-white" : "text-gray-800"}`} />
-              <h1 className={`text-xl font-semibold ${darkMode ? "text-white" : "text-gray-800"}`}>Ghumti Assistant</h1>
+              <Bus className="w-6 h-6 mr-2 text-gray-800" />
+              <h1 className="text-xl font-semibold text-gray-800">Ghumti Assistant</h1>
             </div>
-            <button
-              onClick={() => setDarkMode(!darkMode)}
-              className={`p-2 rounded-full ${darkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"}`}
-            >
+            <button onClick={() => setDarkMode(!darkMode)} className="p-2 rounded-full hover:bg-gray-100">
               {darkMode ? <Sun className="w-5 h-5 text-white" /> : <Moon className="w-5 h-5 text-gray-600" />}
             </button>
           </div>
 
           {/* Chat Messages */}
-          <div className={`h-[600px] overflow-y-auto p-4 ${darkMode ? "bg-gray-800" : "bg-white"}`}>
+          <div className="h-[600px] overflow-y-auto p-4 bg-white">
             {messages.map((message, index) => (
               <ChatMessage key={index} message={message.text} isBot={message.isBot} timestamp={message.timestamp} />
             ))}
@@ -150,7 +152,7 @@ function App() {
           </div>
 
           {/* Input Area */}
-          <div className={`p-4 border-t ${darkMode ? "border-gray-700 bg-gray-800" : "border-gray-100 bg-white"}`}>
+          <div className="p-4 border-t bg-white">
             <div className="flex space-x-2">
               <input
                 type="text"
@@ -158,22 +160,17 @@ function App() {
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Type a message..."
-                className={`flex-1 px-4 py-2 rounded-full border focus:outline-none focus:ring-2 ${
-                  darkMode ? "bg-gray-700 border-gray-600 text-white focus:ring-blue-500" : "bg-gray-50 border-gray-200 focus:ring-blue-400"
-                }`}
+                className="flex-1 px-4 py-2 rounded-full border bg-gray-50 focus:ring-blue-400"
               />
-              <button
-                onClick={handleSendMessage}
-                disabled={!inputMessage.trim() || isLoading}
-                className={`p-2 rounded-full transition-colors ${
-                  !inputMessage.trim() || isLoading ? "bg-gray-200 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600"
-                }`}
-              >
+              <button onClick={handleSendMessage} disabled={!inputMessage.trim() || isLoading} className="p-2 rounded-full bg-blue-500 hover:bg-blue-600">
                 <Send className="w-5 h-5 text-white" />
               </button>
             </div>
           </div>
         </div>
+
+        {/* Map Section */}
+        {showMap && <div className="w-1/3 rounded-xl shadow-lg overflow-hidden"><Map /></div>}
       </div>
     </div>
   );
