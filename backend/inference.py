@@ -1,6 +1,6 @@
-from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from llama_cpp import Llama
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_chroma import Chroma
+from langchain_ollama import OllamaLLM
 import os
 
 # Define ChromaDB storage path
@@ -19,9 +19,8 @@ def load_vector_store():
 
 db = load_vector_store()
 
-# Load Local Llama 3 Model (Make sure you have the `.gguf` model file)
-LLAMA_MODEL_PATH = "models/llama-3-8B.gguf"  # Update with the actual path to your model
-llm = Llama(model_path=LLAMA_MODEL_PATH, n_ctx=4096, n_batch=512, verbose=False)
+# Load Local Llama 3 Model via Ollama
+llm = OllamaLLM(model="llama3")  # Uses Ollama instead of llama.cpp
 
 def query_vector_store(db, query_text):
     """Retrieves relevant context from the vector database."""
@@ -36,28 +35,31 @@ def format_prompt(conversation_history, user_question, context_text, max_history
     """Formats the prompt for Llama 3 with chat history and retrieved context."""
     prompt_template = """
     You are Ghumti, an intelligent assistant that helps people navigate local bus routes in Kathmandu Valley.
-    Your job is to provide accurate and easy-to-understand travel guidance based on available bus routes and stops.
-    
-    - If a user provides a **starting location** that is not a bus stop, guide them to the nearest bus stop.
-    - If a user provides both a **start and destination**, find the best bus route and list the stops in order.
-    - If no direct route is available, suggest alternative ways to reach the destination.
-    - Use Google Maps API data to provide walking directions to the nearest stop if necessary.
-    - Keep your responses **clear, concise, and user-friendly**.
-    
-    **Example Scenarios:**
-    1. User: "How do I get from Bhaktapur Durbar Square to Kaushaltar?"
-       Ghumti: "You are at Bhaktapur Durbar Square, which is not a bus stop. The nearest stop is **Suryabinayak**, about 400m away. Walk there and take the **Lagankhel-Bhaktapur Naya Baato** bus, passing through **Aadarsha, Jagati, Koteshor, Lokanthali**, and finally, you’ll reach **Kaushaltar**. Safe travels!"
+    Your sole purpose is to provide accurate and easy-to-understand travel guidance using only public buses.
+    Rules:
 
-    2. User: "Which bus goes to Ratnapark from Koteshor?"
-       Ghumti: "From Koteshor, you can take the **Koteshor-Ratnapark** bus, stopping at **Jadibuti, Baneshwor, New Baneshwor, Singha Durbar**, and then reaching **Ratnapark**."
+    -If a user provides a location that is not a bus stop, guide them to the nearest one.
+    -If a user provides both a start and destination, find the best bus route and list the stops in order.
+    -If no direct bus is available, suggest alternative routes using transfers between buses.
+    -Use Google Maps API data to provide walking directions to the nearest bus stop when needed.
+    -Do not suggest taxis, ride-sharing, private vehicles, or any transport other than buses.
+    -Keep responses clear, concise, and user-friendly.
+    -Ignore unrelated questions, such as those about food recipes.
 
-    **Conversation History:**
+Example Scenarios:
+
+    User: "How do I get from Bhaktapur Durbar Square to Kaushaltar?"
+    Ghumti: "Bhaktapur Durbar Square is not a bus stop. The nearest stop is Suryabinayak, about 400m away. Walk there and take the Lagankhel-Bhaktapur Naya Baato bus. This route stops at Aadarsha, Jagati, Koteshor, Lokanthali, and finally, Kaushaltar. Safe travels!"
+
+    User: "Which bus goes to Ratnapark from Koteshor?"
+    Ghumti: "From Koteshor, take the Koteshor-Ratnapark bus. It stops at Jadibuti, Baneshwor, New Baneshwor, Singha Durbar, and finally, Ratnapark."
+    *Conversation History:*
     {conversation_history}
 
-    **Current User Question:** 
+    *Current User Question:* 
     {user_question}
 
-    **Retrieved Context (Bus Stops & Routes):**
+    *Retrieved Context (Bus Stops & Routes):*
     {context}
     """
 
@@ -70,9 +72,8 @@ def format_prompt(conversation_history, user_question, context_text, max_history
         context=context_text
     )
 
-
-def get_model_response(user_input):
-    """Retrieves relevant context and generates a response using Llama 3."""
+def get_model_response(user_input, conversation_history):
+    """Retrieves relevant context and generates a response using Ollama Llama 3."""
     global last_context
 
     # Retrieve relevant documents from ChromaDB
@@ -81,8 +82,8 @@ def get_model_response(user_input):
     # Format the prompt
     prompt = format_prompt(conversation_history, user_input, context_text)
 
-    # Run Llama 3 locally
-    response = llm(prompt)["choices"][0]["text"].strip()
+    # Run Llama 3 locally via Ollama
+    response = llm.invoke(prompt)  # Uses Ollama instead of llama.cpp
 
     # Store conversation history
     conversation_history.append({"user": user_input, "assistant": response})
@@ -95,7 +96,7 @@ def main():
     while True:
         user_question = input("You: ")
         response = get_model_response(user_question)
-        print(f"Lumi: {response}")
+        print(f"Ghumti: {response}")
 
 if __name__ == "__main__":
     main()

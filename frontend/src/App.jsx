@@ -49,6 +49,10 @@ function App() {
         body: JSON.stringify({ message: inputMessage }),
       });
 
+      if (!response.ok) {
+        throw new Error("Server error. Please try again.");
+      }
+
       const data = await response.json();
 
       setMessages((prev) => [
@@ -96,7 +100,7 @@ function App() {
               <h1 className="text-4xl font-bold mb-4">Ghumti</h1>
               <p className="text-xl mb-8">Your Local Bus Assistant</p>
               <p className="text-base mb-12 text-gray-600 dark:text-gray-300">
-                Get real-time information about bus routes, schedules, and more. I'm here to help you navigate your journey!
+                Get accurate local bus route info, nearest stops, and travel guidance!
               </p>
               <button
                 onClick={startChat}

@@ -9,7 +9,8 @@ from pathlib import Path
 
 # Define paths
 CHROMA_PATH = "chroma"
-DATA_PATH = "data"
+# DATA_PATH = "data"
+DATA_PATH = os.path.join(os.path.dirname(__file__), '..', 'data')
 
 # Initialize lists to hold documents
 md_documents = []
