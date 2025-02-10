@@ -17,7 +17,7 @@ export const ChatMessage = ({ message, isBot, timestamp }) => {
               isBot ? "bg-gray-100 text-gray-800" : "bg-blue-500 text-white"
             }`}
           >
-            <p> className="text-sm"{message}</p>
+            <p className="text-sm">{message}</p>
           </div>
           <span className={`text-xs mt-1 ${isBot ? "text-left" : "text-right"} block text-gray-500`}>
             {timestamp}
